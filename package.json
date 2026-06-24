@@ -1,0 +1,24 @@
+{
+  "name": "farmacia-inventario",
+  "version": "1.0.0",
+  "description": "Sistema de administración de inventario para una farmacia con Express y MySQL",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "farmacia",
+    "inventario",
+    "mysql",
+    "express"
+  ],
+  "author": "Antigravity",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mysql2": "^3.9.7"
+  }
+}

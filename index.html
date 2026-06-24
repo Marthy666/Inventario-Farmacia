@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario de Farmacia - Panel de Control</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Sistema profesional y responsivo para el control y administración del inventario de productos farmacéuticos. Conectado a base de datos MySQL.">
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Estilos del aplicativo -->
+  <link rel="stylesheet" href="styles.css">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Cabecera del Panel -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i data-lucide="plus-circle" class="brand-icon"></i>
+        </div>
+        <div>
+          <h1 class="app-title">Inventario de Farmacia</h1>
+          <p class="app-subtitle">Panel de Control & Gestión de Stock</p>
+        </div>
+      </div>
+      <div class="db-status">
+        <span class="status-indicator online"></span>
+        <span class="status-text">Conectado a MySQL</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal -->
+  <main class="app-container">
+    
+    <!-- Sección de Estadísticas Rápidas (KPIs) -->
+    <section class="kpi-section" aria-label="Resumen de inventario">
+      <!-- Tarjeta 1: Total Productos -->
+      <div class="kpi-card">
+        <div class="kpi-info">
+          <span class="kpi-label">Total Productos</span>
+          <h2 id="kpi-total-products" class="kpi-value">0</h2>
+        </div>
+        <div class="kpi-icon-container blue">
+          <i data-lucide="package"></i>
+        </div>
+      </div>
+
+      <!-- Tarjeta 2: Stock Crítico (Alerta Stock Bajo < 10 o Agotado) -->
+      <div class="kpi-card">
+        <div class="kpi-info">
+          <span class="kpi-label">Stock Crítico (&lt; 10)</span>
+          <h2 id="kpi-low-stock" class="kpi-value">0</h2>
+        </div>
+        <div class="kpi-icon-container orange" id="low-stock-kpi-box">
+          <i data-lucide="alert-triangle"></i>
+        </div>
+      </div>
+
+      <!-- Tarjeta 3: Valor Total Inventario -->
+      <div class="kpi-card">
+        <div class="kpi-info">
+          <span class="kpi-label">Valor Estimado</span>
+          <h2 id="kpi-total-value" class="kpi-value">$0.00</h2>
+        </div>
+        <div class="kpi-icon-container green">
+          <i data-lucide="dollar-sign"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layout Principal: 2 Columnas -->
+    <div class="content-layout">
+      
+      <!-- Columna Izquierda: Formulario (Agregar / Editar) -->
+      <aside class="sidebar-form">
+        <div class="card" id="form-card">
+          <div class="card-header">
+            <h2 id="form-title" class="card-title">
+              <i data-lucide="file-plus" class="title-icon"></i> Registrar Producto
+            </h2>
+            <p id="form-desc" class="card-subtitle">Complete los datos para agregar un nuevo medicamento.</p>
+          </div>
+          
+          <form id="product-form" class="product-form" novalidate>
+            <!-- Campo oculto para el ID al editar -->
+            <input type="hidden" id="product-id" name="id">
+
+            <div class="form-group">
+              <label for="codigo">Código del Producto <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <i data-lucide="barcode" class="input-icon"></i>
+                <input type="text" id="codigo" name="codigo" placeholder="Ej: P001" required>
+              </div>
+              <small class="error-msg" id="error-codigo"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="nombre">Nombre del Producto <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <i data-lucide="file-text" class="input-icon"></i>
+                <input type="text" id="nombre" name="nombre" placeholder="Ej: Paracetamol 500mg" required>
+              </div>
+              <small class="error-msg" id="error-nombre"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="cantidad">Cantidad Disponible <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <i data-lucide="layers" class="input-icon"></i>
+                <input type="number" id="cantidad" name="cantidad" placeholder="0" min="0" required step="1">
+              </div>
+              <small class="error-msg" id="error-cantidad"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="precio_venta">Precio de Venta ($) <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <i data-lucide="dollar-sign" class="input-icon"></i>
+                <input type="number" id="precio_venta" name="precio_venta" placeholder="0.00" min="0.01" step="0.01" required>
+              </div>
+              <small class="error-msg" id="error-precio"></small>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" id="btn-submit" class="btn btn-primary">
+                <i data-lucide="plus"></i> <span id="btn-submit-text">Guardar Producto</span>
+              </button>
+              <button type="button" id="btn-cancel" class="btn btn-secondary hidden">
+                Cancelar Edición
+              </button>
+            </div>
+          </form>
+        </div>
+      </aside>
+
+      <!-- Columna Derecha: Tabla y Búsqueda -->
+      <section class="main-content" aria-label="Listado y Búsqueda">
+        <div class="card table-card">
+          <div class="card-header table-header-flex">
+            <div>
+              <h2 class="card-title">Inventario Actual</h2>
+              <p class="card-subtitle">Listado completo de productos registrados en la base de datos.</p>
+            </div>
+            
+            <!-- Barra de Búsqueda -->
+            <div class="search-wrapper">
+              <i data-lucide="search" class="search-icon"></i>
+              <input type="text" id="search-input" placeholder="Buscar por código o nombre...">
+              <button id="btn-clear-search" class="clear-search-btn hidden" title="Limpiar búsqueda">
+                <i data-lucide="x"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Contenedor de la Tabla (con scroll horizontal responsivo) -->
+          <div class="table-responsive">
+            <table class="products-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Nombre del Producto</th>
+                  <th class="text-right">Cantidad</th>
+                  <th class="text-right">Precio</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="products-table-body">
+                <!-- Se poblará dinámicamente mediante JS -->
+                <tr>
+                  <td colspan="5" class="table-loading">
+                    <div class="spinner"></div>
+                    Cargando inventario...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Estado Vacío -->
+          <div id="empty-state" class="empty-state hidden">
+            <i data-lucide="package-search" class="empty-icon"></i>
+            <h3>No se encontraron productos</h3>
+            <p>No hay coincidencias para su búsqueda o el inventario está vacío. Intente registrar un producto.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal de Confirmación para Eliminación -->
+  <div id="delete-modal" class="modal-overlay hidden" aria-hidden="true" role="dialog">
+    <div class="modal-card">
+      <div class="modal-header warning">
+        <i data-lucide="alert-octagon" class="modal-header-icon"></i>
+        <h3>¿Eliminar Producto?</h3>
+      </div>
+      <div class="modal-body">
+        <p>¿Está seguro de que desea eliminar el producto <strong id="delete-product-name">...</strong> del inventario?</p>
+        <p class="modal-warning-text">Esta acción es permanente y no se podrá deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-delete-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="btn-delete-confirm" class="btn btn-danger">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor para Notificaciones Flotantes (Toasts) -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Lógica de la Interfaz -->
+  <script src="script.js"></script>
+</body>
+</html>
